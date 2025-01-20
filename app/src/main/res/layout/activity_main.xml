@@ -9,14 +9,16 @@
     tools:context=".MainActivity">
 
     <TextView
+        android:background="@drawable/score_background"
         android:id="@+id/scoreTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Score: 0"
+        android:padding="16dp"
         android:textSize="24sp"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="16dp"/>
+        android:layout_marginTop="36dp"/>
 
     <TextView
         android:id="@+id/timerTextView"
