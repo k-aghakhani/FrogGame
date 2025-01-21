@@ -1,5 +1,6 @@
 package com.aghakhani.froggame;
 
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.View;
@@ -30,6 +31,10 @@ public class MainActivity extends AppCompatActivity {
     private boolean isGameActive = true;
     private Animation fadeIn, fadeOut;
 
+    private MediaPlayer clickSound;
+    private MediaPlayer winSound;
+    private MediaPlayer loseSound;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -41,6 +46,11 @@ public class MainActivity extends AppCompatActivity {
         timerTextView = findViewById(R.id.timerTextView);
         frogImageView = findViewById(R.id.frogImageView);
         gameLayout = findViewById(R.id.gameLayout);
+
+        // Initialize Media Players
+        clickSound = MediaPlayer.create(this, R.raw.click_sound);
+        winSound = MediaPlayer.create(this, R.raw.win_sound);
+        loseSound = MediaPlayer.create(this, R.raw.lose_sound);
 
         // Load animations
         fadeIn = AnimationUtils.loadAnimation(this, R.anim.fade_in);
@@ -90,6 +100,9 @@ public class MainActivity extends AppCompatActivity {
                             public void onClick(View v) {
                                 score++;
                                 scoreTextView.setText("Score: " + score);
+                                if (clickSound != null) {
+                                    clickSound.start();
+                                }
                                 frogImageView.startAnimation(fadeOut);
                                 frogImageView.setVisibility(View.INVISIBLE);
                                 spawnFrog();
@@ -140,14 +153,38 @@ public class MainActivity extends AppCompatActivity {
                     .setMessage("Your score: " + score)
                     .setPositiveButton("OK", null)
                     .setCancelable(false);
+            if (winSound != null) {
+                winSound.start();
+            }
         } else {
             builder.setTitle("You Lose! 😢")
                     .setMessage("Your score: " + score)
                     .setPositiveButton("OK", null)
                     .setCancelable(false);
+            if (loseSound != null) {
+                loseSound.start();
+            }
             builder.create().getWindow().setBackgroundDrawableResource(android.R.color.holo_red_light);
         }
         builder.show();
+    }
+
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (clickSound != null) {
+            clickSound.release();
+            clickSound = null;
+        }
+        if (winSound != null) {
+            winSound.release();
+            winSound = null;
+        }
+        if (loseSound != null) {
+            loseSound.release();
+            loseSound = null;
+        }
     }
 
 
