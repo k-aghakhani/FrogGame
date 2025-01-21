@@ -13,6 +13,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 
 import java.util.Random;
 
@@ -22,10 +24,12 @@ public class MainActivity extends AppCompatActivity {
     private ImageView frogImageView;
     private RelativeLayout gameLayout;
     private int score = 0;
-    private int timeLeft = 60; // 3 minutes in seconds
+    private int timeLeft = 180; // 3 minutes in seconds
     private Handler handler = new Handler();
     private Random random = new Random();
     private boolean isGameActive = true;
+    private Animation fadeIn, fadeOut;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -38,11 +42,14 @@ public class MainActivity extends AppCompatActivity {
         frogImageView = findViewById(R.id.frogImageView);
         gameLayout = findViewById(R.id.gameLayout);
 
+        // Load animations
+        fadeIn = AnimationUtils.loadAnimation(this, R.anim.fade_in);
+        fadeOut = AnimationUtils.loadAnimation(this, R.anim.fade_out);
+
         startGame();
 
 
     }
-
 
     private void startGame() {
         updateTimer();
@@ -74,12 +81,16 @@ public class MainActivity extends AppCompatActivity {
                         // Set random position for the frog
                         setRandomPosition(frogImageView);
 
+                        // Show frog with fade-in animation
+                        frogImageView.startAnimation(fadeIn);
                         frogImageView.setVisibility(View.VISIBLE);
+
                         frogImageView.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
                                 score++;
                                 scoreTextView.setText("Score: " + score);
+                                frogImageView.startAnimation(fadeOut);
                                 frogImageView.setVisibility(View.INVISIBLE);
                                 spawnFrog();
                             }
@@ -89,6 +100,7 @@ public class MainActivity extends AppCompatActivity {
                             @Override
                             public void run() {
                                 if (frogImageView.getVisibility() == View.VISIBLE) {
+                                    frogImageView.startAnimation(fadeOut);
                                     frogImageView.setVisibility(View.INVISIBLE);
                                     spawnFrog();
                                 }
@@ -101,22 +113,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setRandomPosition(ImageView imageView) {
-        // Get screen dimensions
         int screenWidth = gameLayout.getWidth();
         int screenHeight = gameLayout.getHeight();
-
-        // Get frog dimensions
         int frogWidth = imageView.getWidth();
         int frogHeight = imageView.getHeight();
 
-        // Generate random position within screen bounds
         int maxX = screenWidth - frogWidth;
         int maxY = screenHeight - frogHeight;
 
         int randomX = random.nextInt(maxX);
         int randomY = random.nextInt(maxY);
 
-        // Set new position
         RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) imageView.getLayoutParams();
         params.leftMargin = randomX;
         params.topMargin = randomY;
@@ -129,12 +136,12 @@ public class MainActivity extends AppCompatActivity {
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         if (score >= 10) {
-            builder.setTitle("You Win!")
+            builder.setTitle("You Win! 🎉")
                     .setMessage("Your score: " + score)
                     .setPositiveButton("OK", null)
                     .setCancelable(false);
         } else {
-            builder.setTitle("You Lose!")
+            builder.setTitle("You Lose! 😢")
                     .setMessage("Your score: " + score)
                     .setPositiveButton("OK", null)
                     .setCancelable(false);
