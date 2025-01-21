@@ -25,7 +25,7 @@ public class MainActivity extends AppCompatActivity {
     private ImageView frogImageView;
     private RelativeLayout gameLayout;
     private int score = 0;
-    private int timeLeft = 180; // 3 minutes in seconds
+    private int timeLeft = 60; // 3 minutes in seconds
     private Handler handler = new Handler();
     private Random random = new Random();
     private boolean isGameActive = true;
