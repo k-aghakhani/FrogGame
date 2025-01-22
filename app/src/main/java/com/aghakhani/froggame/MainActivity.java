@@ -1,5 +1,6 @@
 package com.aghakhani.froggame;
 
+import android.content.DialogInterface;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
@@ -20,17 +21,17 @@ import android.view.animation.AnimationUtils;
 import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
+
     private TextView scoreTextView;
     private TextView timerTextView;
     private ImageView frogImageView;
     private RelativeLayout gameLayout;
     private int score = 0;
-    private int timeLeft = 60; // 3 minutes in seconds
+    private int timeLeft = 30; // 3 minutes in seconds
     private Handler handler = new Handler();
     private Random random = new Random();
     private boolean isGameActive = true;
     private Animation fadeIn, fadeOut;
-
     private MediaPlayer clickSound;
     private MediaPlayer winSound;
     private MediaPlayer loseSound;
@@ -38,27 +39,23 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
-
 
         scoreTextView = findViewById(R.id.scoreTextView);
         timerTextView = findViewById(R.id.timerTextView);
         frogImageView = findViewById(R.id.frogImageView);
         gameLayout = findViewById(R.id.gameLayout);
 
-        // Initialize Media Players
-        clickSound = MediaPlayer.create(this, R.raw.click_sound);
-        winSound = MediaPlayer.create(this, R.raw.win_sound);
-        loseSound = MediaPlayer.create(this, R.raw.lose_sound);
-
         // Load animations
         fadeIn = AnimationUtils.loadAnimation(this, R.anim.fade_in);
         fadeOut = AnimationUtils.loadAnimation(this, R.anim.fade_out);
 
+        // Initialize sounds
+        clickSound = MediaPlayer.create(this, R.raw.click_sound);
+        winSound = MediaPlayer.create(this, R.raw.win_sound);
+        loseSound = MediaPlayer.create(this, R.raw.lose_sound);
+
         startGame();
-
-
     }
 
     private void startGame() {
@@ -88,10 +85,7 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void run() {
                     if (isGameActive) {
-                        // Set random position for the frog
                         setRandomPosition(frogImageView);
-
-                        // Show frog with fade-in animation
                         frogImageView.startAnimation(fadeIn);
                         frogImageView.setVisibility(View.VISIBLE);
 
@@ -151,24 +145,44 @@ public class MainActivity extends AppCompatActivity {
         if (score >= 10) {
             builder.setTitle("You Win! 🎉")
                     .setMessage("Your score: " + score)
-                    .setPositiveButton("OK", null)
+                    .setPositiveButton("Play Again", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            restartGame();
+                        }
+                    })
                     .setCancelable(false);
+
             if (winSound != null) {
                 winSound.start();
             }
         } else {
             builder.setTitle("You Lose! 😢")
                     .setMessage("Your score: " + score)
-                    .setPositiveButton("OK", null)
+                    .setPositiveButton("Play Again", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            restartGame();
+                        }
+                    })
                     .setCancelable(false);
+            builder.create().getWindow().setBackgroundDrawableResource(android.R.color.holo_red_light);
+
             if (loseSound != null) {
                 loseSound.start();
             }
-            builder.create().getWindow().setBackgroundDrawableResource(android.R.color.holo_red_light);
         }
         builder.show();
     }
 
+    private void restartGame() {
+        score = 0;
+        timeLeft = 180;
+        isGameActive = true;
+        scoreTextView.setText("Score: 0");
+        timerTextView.setText("Time: 180");
+        startGame();
+    }
 
     @Override
     protected void onDestroy() {
@@ -186,6 +200,4 @@ public class MainActivity extends AppCompatActivity {
             loseSound = null;
         }
     }
-
-
 }
