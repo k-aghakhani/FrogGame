@@ -5,6 +5,7 @@ import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -141,38 +142,46 @@ public class MainActivity extends AppCompatActivity {
         isGameActive = false;
         frogImageView.setVisibility(View.INVISIBLE);
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        if (score >= 10) {
-            builder.setTitle("You Win! 🎉")
-                    .setMessage("Your score: " + score)
-                    .setPositiveButton("Play Again", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            restartGame();
-                        }
-                    })
-                    .setCancelable(false);
+        // Create a custom dialog
+        AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.CustomDialogTheme);
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_end_game, null);
+        builder.setView(dialogView);
 
+        // Initialize dialog views
+        TextView titleTextView = dialogView.findViewById(R.id.dialogTitle);
+        TextView messageTextView = dialogView.findViewById(R.id.dialogMessage);
+        Button playAgainButton = dialogView.findViewById(R.id.playAgainButton);
+        ImageView iconImageView = dialogView.findViewById(R.id.dialogIcon);
+
+        // Set dialog content based on game result
+        if (score >= 10) {
+            titleTextView.setText("You Win! 🎉");
+            messageTextView.setText("Your score: " + score);
+            iconImageView.setImageResource(R.drawable.ic_win); // Win icon
             if (winSound != null) {
                 winSound.start();
             }
         } else {
-            builder.setTitle("You Lose! 😢")
-                    .setMessage("Your score: " + score)
-                    .setPositiveButton("Play Again", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            restartGame();
-                        }
-                    })
-                    .setCancelable(false);
-            builder.create().getWindow().setBackgroundDrawableResource(android.R.color.holo_red_light);
-
+            titleTextView.setText("You Lose! 😢");
+            messageTextView.setText("Your score: " + score);
+            iconImageView.setImageResource(R.drawable.ic_lose); // Lose icon
             if (loseSound != null) {
                 loseSound.start();
             }
         }
-        builder.show();
+
+        // Set up the Play Again button
+        AlertDialog dialog = builder.create();
+        playAgainButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+                restartGame();
+            }
+        });
+
+        // Show the dialog
+        dialog.show();
     }
 
     private void restartGame() {
