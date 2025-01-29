@@ -54,12 +54,26 @@
             android:shadowRadius="4"/>
     </LinearLayout>
 
+
     <ImageView
         android:id="@+id/frogImageView"
         android:layout_width="100dp"
         android:layout_height="100dp"
         android:visibility="invisible"
         android:src="@drawable/frog_image"
+        android:elevation="12dp"
+        android:shadowColor="#80000000"
+        android:shadowDx="4"
+        android:shadowDy="4"
+        android:shadowRadius="8"/>
+
+
+    <ImageView
+        android:id="@+id/starImageView"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:visibility="invisible"
+        android:src="@drawable/star_image"
         android:elevation="12dp"
         android:shadowColor="#80000000"
         android:shadowDx="4"
