@@ -15,14 +15,14 @@ import java.util.Random;
 public class MainActivity extends AppCompatActivity {
 
     private TextView scoreTextView, timerTextView;
-    private ImageView frogImageView, starImageView;
+    private ImageView frogImageView, starImageView, peeImageView;
     private RelativeLayout gameLayout;
     private int score = 0, timeLeft = 180;
     private Handler handler = new Handler();
     private Random random = new Random();
     private boolean isGameActive = true;
     private Animation fadeIn, fadeOut;
-    private MediaPlayer clickSound;
+    private MediaPlayer clickSound, screamSound;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,12 +33,14 @@ public class MainActivity extends AppCompatActivity {
         timerTextView = findViewById(R.id.timerTextView);
         frogImageView = findViewById(R.id.frogImageView);
         starImageView = findViewById(R.id.starImageView);
+        peeImageView = findViewById(R.id.peeImageView);
         gameLayout = findViewById(R.id.gameLayout);
 
         fadeIn = AnimationUtils.loadAnimation(this, R.anim.fade_in);
         fadeOut = AnimationUtils.loadAnimation(this, R.anim.fade_out);
 
         clickSound = MediaPlayer.create(this, R.raw.click_sound);
+        screamSound = MediaPlayer.create(this, R.raw.scream_sound);
 
         startGame();
     }
@@ -47,6 +49,7 @@ public class MainActivity extends AppCompatActivity {
         updateTimer();
         spawnFrog();
         spawnStarRandomly();
+        spawnPeeRandomly();
     }
 
     private void updateTimer() {
@@ -93,9 +96,9 @@ public class MainActivity extends AppCompatActivity {
 
     private void spawnStarRandomly() {
         if (isGameActive) {
-            int delay = random.nextInt(3000) + 2000; // 2 to 5 seconds delay between displays
+            int delay = random.nextInt(3000) + 2000;
             handler.postDelayed(() -> {
-                if (isGameActive && random.nextInt(2) == 0) {// 50% chance of showing a star
+                if (isGameActive && random.nextInt(2) == 0) {
                     setRandomPosition(starImageView);
                     starImageView.startAnimation(fadeIn);
                     starImageView.setVisibility(View.VISIBLE);
@@ -115,9 +118,41 @@ public class MainActivity extends AppCompatActivity {
                             starImageView.setVisibility(View.INVISIBLE);
                         }
                         spawnStarRandomly();
-                    }, 800); // Star display duration ( from 1500 ms to 800ms)
+                    }, 800);
                 } else {
                     spawnStarRandomly();
+                }
+            }, delay);
+        }
+    }
+
+    private void spawnPeeRandomly() {
+        if (isGameActive) {
+            int delay = random.nextInt(3000) + 1000;
+            handler.postDelayed(() -> {
+                if (isGameActive && random.nextInt(2) == 0) {
+                    setRandomPosition(peeImageView);
+                    peeImageView.startAnimation(fadeIn);
+                    peeImageView.setVisibility(View.VISIBLE);
+
+                    peeImageView.setOnClickListener(v -> {
+                        score -= 50;
+                        scoreTextView.setText("Score: " + score);
+                        if (screamSound != null) screamSound.start();
+                        peeImageView.startAnimation(fadeOut);
+                        peeImageView.setVisibility(View.INVISIBLE);
+                        spawnPeeRandomly();
+                    });
+
+                    handler.postDelayed(() -> {
+                        if (peeImageView.getVisibility() == View.VISIBLE) {
+                            peeImageView.startAnimation(fadeOut);
+                            peeImageView.setVisibility(View.INVISIBLE);
+                        }
+                        spawnPeeRandomly();
+                    }, 600);
+                } else {
+                    spawnPeeRandomly();
                 }
             }, delay);
         }
@@ -145,6 +180,7 @@ public class MainActivity extends AppCompatActivity {
         isGameActive = false;
         frogImageView.setVisibility(View.INVISIBLE);
         starImageView.setVisibility(View.INVISIBLE);
+        peeImageView.setVisibility(View.INVISIBLE);
     }
 
     @Override
@@ -153,6 +189,10 @@ public class MainActivity extends AppCompatActivity {
         if (clickSound != null) {
             clickSound.release();
             clickSound = null;
+        }
+        if (screamSound != null) {
+            screamSound.release();
+            screamSound = null;
         }
     }
 }
