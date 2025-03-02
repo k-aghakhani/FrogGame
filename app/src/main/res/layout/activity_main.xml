@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/gameLayout"
     android:layout_width="match_parent"
@@ -9,6 +8,7 @@
     android:padding="16dp"
     tools:context=".MainActivity">
 
+    <!-- Score and Timer Container -->
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -54,7 +54,38 @@
             android:shadowRadius="4"/>
     </LinearLayout>
 
-    <!-- frog -->
+    <!-- High Score Display -->
+    <TextView
+        android:id="@+id/highScoreTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/scoreTextView"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="16dp"
+        android:text="High Score: 0"
+        android:textSize="20sp"
+        android:textColor="#FFD700"
+        android:fontFamily="@font/roboto_bold"
+        android:shadowColor="#80000000"
+        android:shadowDx="2"
+        android:shadowDy="2"
+        android:shadowRadius="4"/>
+
+    <!-- Start Button -->
+    <Button
+        android:id="@+id/startButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Start Game"
+        android:textSize="18sp"
+        android:padding="16dp"
+        android:backgroundTint="#4CAF50"
+        android:textColor="#FFFFFF"
+        android:layout_centerInParent="true"
+        android:visibility="gone"
+        android:elevation="8dp"/>
+
+    <!-- Frog Image -->
     <ImageView
         android:id="@+id/frogImageView"
         android:layout_width="100dp"
@@ -67,7 +98,7 @@
         android:shadowDy="4"
         android:shadowRadius="8"/>
 
-    <!-- star -->
+    <!-- Star Image -->
     <ImageView
         android:id="@+id/starImageView"
         android:layout_width="80dp"
@@ -80,7 +111,7 @@
         android:shadowDy="3"
         android:shadowRadius="6"/>
 
-    <!-- Pee -->
+    <!-- Pee Image -->
     <ImageView
         android:id="@+id/peeImageView"
         android:layout_width="80dp"

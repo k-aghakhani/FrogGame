@@ -1,57 +1,105 @@
 package com.aghakhani.froggame;
 
+import android.content.SharedPreferences;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.View;
+import android.view.ViewTreeObserver;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
 import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
 
-    private TextView scoreTextView, timerTextView;
+    private TextView scoreTextView, timerTextView, highScoreTextView;
     private ImageView frogImageView, starImageView, peeImageView;
     private RelativeLayout gameLayout;
-    private int score = 0, timeLeft = 180;
+    private Button startButton;
+    private int score = 0, timeLeft = 180, highScore = 0;
     private Handler handler = new Handler();
     private Random random = new Random();
-    private boolean isGameActive = true;
-    private Animation fadeIn, fadeOut;
-    private MediaPlayer clickSound, screamSound;
+    private boolean isGameActive = false;
+    private Animation fadeIn, fadeOut, scaleUp;
+    private MediaPlayer clickSound, screamSound, starSound;
+    private SharedPreferences prefs;
+
+    // Constants for better maintainability
+    private static final int FROG_SCORE = 1;
+    private static final int STAR_SCORE = 20;
+    private static final int PEE_PENALTY = 50;
+    private static final int INITIAL_TIME = 180;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // Initialize UI elements
         scoreTextView = findViewById(R.id.scoreTextView);
         timerTextView = findViewById(R.id.timerTextView);
+        highScoreTextView = findViewById(R.id.highScoreTextView);
         frogImageView = findViewById(R.id.frogImageView);
         starImageView = findViewById(R.id.starImageView);
         peeImageView = findViewById(R.id.peeImageView);
         gameLayout = findViewById(R.id.gameLayout);
+        startButton = findViewById(R.id.startButton);
 
+        // Load animations
         fadeIn = AnimationUtils.loadAnimation(this, R.anim.fade_in);
         fadeOut = AnimationUtils.loadAnimation(this, R.anim.fade_out);
+        scaleUp = AnimationUtils.loadAnimation(this, R.anim.scale_up);
 
+        // Load sound effects
         clickSound = MediaPlayer.create(this, R.raw.click_sound);
         screamSound = MediaPlayer.create(this, R.raw.scream_sound);
+        starSound = MediaPlayer.create(this, R.raw.star_sound); // New sound for star
 
-        startGame();
+        // Load high score from SharedPreferences
+        prefs = getSharedPreferences("FrogGamePrefs", MODE_PRIVATE);
+        highScore = prefs.getInt("highScore", 0);
+        highScoreTextView.setText("High Score: " + highScore);
+
+        // Ensure layout is fully loaded before starting
+        gameLayout.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                gameLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                showStartButton();
+            }
+        });
     }
 
+    // Show the start button at the beginning
+    private void showStartButton() {
+        startButton.setVisibility(View.VISIBLE);
+        startButton.setOnClickListener(v -> {
+            startButton.setVisibility(View.GONE);
+            startGame();
+        });
+    }
+
+    // Start a new game
     private void startGame() {
+        score = 0;
+        timeLeft = INITIAL_TIME;
+        isGameActive = true;
+        scoreTextView.setText("Score: " + score);
+        timerTextView.setText("Time: " + timeLeft);
+        handler.removeCallbacksAndMessages(null); // Clear previous handlers
         updateTimer();
         spawnFrog();
         spawnStarRandomly();
         spawnPeeRandomly();
     }
 
+    // Update the game timer
     private void updateTimer() {
         handler.postDelayed(() -> {
             if (timeLeft > 0 && isGameActive) {
@@ -64,9 +112,10 @@ public class MainActivity extends AppCompatActivity {
         }, 1000);
     }
 
+    // Spawn frogs randomly
     private void spawnFrog() {
         if (isGameActive) {
-            int delay = random.nextInt(3000) + 1000;
+            int delay = random.nextInt(2000) + 1000; // Reduced delay for increased difficulty
             handler.postDelayed(() -> {
                 if (isGameActive) {
                     setRandomPosition(frogImageView);
@@ -74,9 +123,9 @@ public class MainActivity extends AppCompatActivity {
                     frogImageView.setVisibility(View.VISIBLE);
 
                     frogImageView.setOnClickListener(v -> {
-                        score++;
-                        scoreTextView.setText("Score: " + score);
-                        if (clickSound != null) clickSound.start();
+                        score += FROG_SCORE;
+                        updateScore();
+                        playSound(clickSound);
                         frogImageView.startAnimation(fadeOut);
                         frogImageView.setVisibility(View.INVISIBLE);
                         spawnFrog();
@@ -94,19 +143,20 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    // Spawn stars randomly
     private void spawnStarRandomly() {
         if (isGameActive) {
             int delay = random.nextInt(3000) + 2000;
             handler.postDelayed(() -> {
                 if (isGameActive && random.nextInt(2) == 0) {
                     setRandomPosition(starImageView);
-                    starImageView.startAnimation(fadeIn);
+                    starImageView.startAnimation(scaleUp); // New animation for stars
                     starImageView.setVisibility(View.VISIBLE);
 
                     starImageView.setOnClickListener(v -> {
-                        score += 20;
-                        scoreTextView.setText("Score: " + score);
-                        if (clickSound != null) clickSound.start();
+                        score += STAR_SCORE;
+                        updateScore();
+                        playSound(starSound);
                         starImageView.startAnimation(fadeOut);
                         starImageView.setVisibility(View.INVISIBLE);
                         spawnStarRandomly();
@@ -126,6 +176,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    // Spawn pee randomly
     private void spawnPeeRandomly() {
         if (isGameActive) {
             int delay = random.nextInt(3000) + 1000;
@@ -136,9 +187,9 @@ public class MainActivity extends AppCompatActivity {
                     peeImageView.setVisibility(View.VISIBLE);
 
                     peeImageView.setOnClickListener(v -> {
-                        score -= 50;
-                        scoreTextView.setText("Score: " + score);
-                        if (screamSound != null) screamSound.start();
+                        score -= PEE_PENALTY;
+                        updateScore();
+                        playSound(screamSound);
                         peeImageView.startAnimation(fadeOut);
                         peeImageView.setVisibility(View.INVISIBLE);
                         spawnPeeRandomly();
@@ -158,14 +209,15 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    // Set random position for an ImageView
     private void setRandomPosition(ImageView imageView) {
         int screenWidth = gameLayout.getWidth();
         int screenHeight = gameLayout.getHeight();
         int width = imageView.getWidth();
         int height = imageView.getHeight();
 
-        int maxX = screenWidth - width;
-        int maxY = screenHeight - height;
+        int maxX = Math.max(0, screenWidth - width);
+        int maxY = Math.max(0, screenHeight - height);
 
         int randomX = random.nextInt(maxX);
         int randomY = random.nextInt(maxY);
@@ -176,13 +228,64 @@ public class MainActivity extends AppCompatActivity {
         imageView.setLayoutParams(params);
     }
 
+    // Update the score and high score
+    private void updateScore() {
+        scoreTextView.setText("Score: " + score);
+        if (score > highScore) {
+            highScore = score;
+            highScoreTextView.setText("High Score: " + highScore);
+            prefs.edit().putInt("highScore", highScore).apply();
+        }
+    }
+
+    // Play a sound effect safely
+    private void playSound(MediaPlayer sound) {
+        if (sound != null) {
+            sound.seekTo(0); // Reset to start for replay
+            sound.start();
+        }
+    }
+
+    // End the game and show dialog
     private void endGame() {
         isGameActive = false;
+        handler.removeCallbacksAndMessages(null);
         frogImageView.setVisibility(View.INVISIBLE);
         starImageView.setVisibility(View.INVISIBLE);
         peeImageView.setVisibility(View.INVISIBLE);
+        showGameOverDialog();
     }
 
+    // Show game over dialog with score and replay option
+    private void showGameOverDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle("Game Over")
+                .setMessage("Your Score: " + score + "\nHigh Score: " + highScore + "\nPlay again?")
+                .setPositiveButton("Yes", (dialog, which) -> startGame())
+                .setNegativeButton("No", (dialog, which) -> finish())
+                .setCancelable(false)
+                .show();
+    }
+
+    // Pause the game when app is in background
+    @Override
+    protected void onPause() {
+        super.onPause();
+        isGameActive = false;
+        handler.removeCallbacksAndMessages(null);
+    }
+
+    // Resume the game when app is back in foreground
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (timeLeft > 0 && !isGameActive) {
+            isGameActive = true;
+            updateTimer();
+        }
+    }
+
+    // Clean up resources on destroy
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -193,6 +296,10 @@ public class MainActivity extends AppCompatActivity {
         if (screamSound != null) {
             screamSound.release();
             screamSound = null;
+        }
+        if (starSound != null) {
+            starSound.release();
+            starSound = null;
         }
     }
 }
