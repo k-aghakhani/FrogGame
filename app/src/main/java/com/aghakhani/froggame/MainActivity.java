@@ -59,14 +59,14 @@ public class MainActivity extends AppCompatActivity {
         // Load sound effects
         clickSound = MediaPlayer.create(this, R.raw.click_sound);
         screamSound = MediaPlayer.create(this, R.raw.scream_sound);
-        starSound = MediaPlayer.create(this, R.raw.star_sound); // New sound for star
+        starSound = MediaPlayer.create(this, R.raw.star_sound);
 
         // Load high score from SharedPreferences
         prefs = getSharedPreferences("FrogGamePrefs", MODE_PRIVATE);
         highScore = prefs.getInt("highScore", 0);
         highScoreTextView.setText("High Score: " + highScore);
 
-        // Ensure layout is fully loaded before starting
+        // Ensure layout is fully loaded before showing start button
         gameLayout.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
@@ -79,6 +79,8 @@ public class MainActivity extends AppCompatActivity {
     // Show the start button at the beginning
     private void showStartButton() {
         startButton.setVisibility(View.VISIBLE);
+        scoreTextView.setText("Score: 0");
+        timerTextView.setText("Time: " + INITIAL_TIME); // Set initial time display
         startButton.setOnClickListener(v -> {
             startButton.setVisibility(View.GONE);
             startGame();
@@ -93,7 +95,7 @@ public class MainActivity extends AppCompatActivity {
         scoreTextView.setText("Score: " + score);
         timerTextView.setText("Time: " + timeLeft);
         handler.removeCallbacksAndMessages(null); // Clear previous handlers
-        updateTimer();
+        updateTimer(); // Start the timer only when the game starts
         spawnFrog();
         spawnStarRandomly();
         spawnPeeRandomly();
@@ -115,7 +117,7 @@ public class MainActivity extends AppCompatActivity {
     // Spawn frogs randomly
     private void spawnFrog() {
         if (isGameActive) {
-            int delay = random.nextInt(2000) + 1000; // Reduced delay for increased difficulty
+            int delay = random.nextInt(2000) + 1000;
             handler.postDelayed(() -> {
                 if (isGameActive) {
                     setRandomPosition(frogImageView);
@@ -150,7 +152,7 @@ public class MainActivity extends AppCompatActivity {
             handler.postDelayed(() -> {
                 if (isGameActive && random.nextInt(2) == 0) {
                     setRandomPosition(starImageView);
-                    starImageView.startAnimation(scaleUp); // New animation for stars
+                    starImageView.startAnimation(scaleUp);
                     starImageView.setVisibility(View.VISIBLE);
 
                     starImageView.setOnClickListener(v -> {
@@ -241,7 +243,7 @@ public class MainActivity extends AppCompatActivity {
     // Play a sound effect safely
     private void playSound(MediaPlayer sound) {
         if (sound != null) {
-            sound.seekTo(0); // Reset to start for replay
+            sound.seekTo(0);
             sound.start();
         }
     }
@@ -261,8 +263,12 @@ public class MainActivity extends AppCompatActivity {
         new AlertDialog.Builder(this)
                 .setTitle("Game Over")
                 .setMessage("Your Score: " + score + "\nHigh Score: " + highScore + "\nPlay again?")
-                .setPositiveButton("Yes", (dialog, which) -> startGame())
-                .setNegativeButton("No", (dialog, which) -> finish())
+                .setPositiveButton("Yes", (dialog, which) -> {
+                    startGame();
+                })
+                .setNegativeButton("No", (dialog, which) -> {
+                    finish();
+                })
                 .setCancelable(false)
                 .show();
     }
@@ -279,7 +285,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        if (timeLeft > 0 && !isGameActive) {
+        if (timeLeft > 0 && !isGameActive && startButton.getVisibility() == View.GONE) {
             isGameActive = true;
             updateTimer();
         }
