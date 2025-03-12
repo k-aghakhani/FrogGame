@@ -27,7 +27,7 @@ public class MainActivity extends AppCompatActivity {
     private Random random = new Random();
     private boolean isGameActive = false;
     private Animation fadeIn, fadeOut, scaleUp;
-    private MediaPlayer clickSound, screamSound, starSound;
+    private MediaPlayer clickSound, screamSound, starSound,gameOver;
     private SharedPreferences prefs;
 
     // Constants for better maintainability
@@ -60,6 +60,7 @@ public class MainActivity extends AppCompatActivity {
         clickSound = MediaPlayer.create(this, R.raw.click_sound);
         screamSound = MediaPlayer.create(this, R.raw.scream_sound);
         starSound = MediaPlayer.create(this, R.raw.star_sound);
+        gameOver = MediaPlayer.create(this, R.raw.lose_sound);
 
         // Load high score from SharedPreferences
         prefs = getSharedPreferences("FrogGamePrefs", MODE_PRIVATE);
@@ -271,6 +272,8 @@ public class MainActivity extends AppCompatActivity {
                 })
                 .setCancelable(false)
                 .show();
+        playSound(gameOver);
+
     }
 
     // Pause the game when app is in background
