@@ -20,7 +20,7 @@ public class MainActivity extends AppCompatActivity {
 
     // UI elements
     private TextView scoreTextView, timerTextView, highScoreTextView;
-    private ImageView frogImageView, starImageView, peeImageView;
+    private ImageView frogImageView, starImageView, peeImageView, clockImageView; // Added clockImageView
     private RelativeLayout gameLayout;
     private Button startButton;
 
@@ -33,7 +33,7 @@ public class MainActivity extends AppCompatActivity {
 
     // Animations and sounds
     private Animation fadeIn, fadeOut, scaleUp;
-    private MediaPlayer clickSound, screamSound, starSound, gameOver;
+    private MediaPlayer clickSound, screamSound, starSound, gameOver, clockSound; // Added clockSound
 
     // SharedPreferences for saving high score
     private SharedPreferences prefs;
@@ -43,6 +43,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int STAR_SCORE = 20;
     private static final int PEE_PENALTY = 50;
     private static final int INITIAL_TIME = 180;
+    private static final int CLOCK_TIME_BONUS = 5; // Time added when clock is clicked
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,6 +57,7 @@ public class MainActivity extends AppCompatActivity {
         frogImageView = findViewById(R.id.frogImageView);
         starImageView = findViewById(R.id.starImageView);
         peeImageView = findViewById(R.id.peeImageView);
+        clockImageView = findViewById(R.id.ceVielockImagw); // Initialize clock ImageView
         gameLayout = findViewById(R.id.gameLayout);
         startButton = findViewById(R.id.startButton);
 
@@ -69,6 +71,7 @@ public class MainActivity extends AppCompatActivity {
         screamSound = MediaPlayer.create(this, R.raw.scream_sound);
         starSound = MediaPlayer.create(this, R.raw.star_sound);
         gameOver = MediaPlayer.create(this, R.raw.lose_sound);
+        clockSound = MediaPlayer.create(this, R.raw.clock_sound); // Add a clock sound (create this resource)
 
         // Load high score from SharedPreferences
         prefs = getSharedPreferences("FrogGamePrefs", MODE_PRIVATE);
@@ -109,6 +112,7 @@ public class MainActivity extends AppCompatActivity {
         spawnFrog();
         spawnStarRandomly();
         spawnPeeRandomly();
+        spawnClockRandomly(); // Start spawning clocks
     }
 
     // Update the game timer recursively
@@ -224,6 +228,40 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    // Spawn clock randomly with a chance
+    private void spawnClockRandomly() {
+        if (isGameActive) {
+            int delay = random.nextInt(4000) + 3000; // Random delay between 3-7 seconds (rarer spawn)
+            handler.postDelayed(() -> {
+                if (isGameActive && random.nextInt(3) == 0) { // 1/3 chance to spawn
+                    setRandomPosition(clockImageView);
+                    clockImageView.startAnimation(scaleUp);
+                    clockImageView.setVisibility(View.VISIBLE);
+
+                    clockImageView.setOnClickListener(v -> {
+                        timeLeft += CLOCK_TIME_BONUS; // Add 5 seconds to the timer
+                        timerTextView.setText("Time: " + timeLeft); // Update timer display
+                        playSound(clockSound);
+                        clockImageView.startAnimation(fadeOut);
+                        clockImageView.setVisibility(View.INVISIBLE);
+                        spawnClockRandomly();
+                    });
+
+                    // Hide clock if not clicked within 1 second
+                    handler.postDelayed(() -> {
+                        if (clockImageView.getVisibility() == View.VISIBLE) {
+                            clockImageView.startAnimation(fadeOut);
+                            clockImageView.setVisibility(View.INVISIBLE);
+                        }
+                        spawnClockRandomly();
+                    }, 1000);
+                } else {
+                    spawnClockRandomly(); // Retry if no clock spawned
+                }
+            }, delay);
+        }
+    }
+
     // Set a random position for an ImageView within the game layout
     private void setRandomPosition(ImageView imageView) {
         int screenWidth = gameLayout.getWidth();
@@ -268,6 +306,7 @@ public class MainActivity extends AppCompatActivity {
         frogImageView.setVisibility(View.INVISIBLE);
         starImageView.setVisibility(View.INVISIBLE);
         peeImageView.setVisibility(View.INVISIBLE);
+        clockImageView.setVisibility(View.INVISIBLE); // Hide clock too
         showGameOverDialog();
     }
 
@@ -302,6 +341,7 @@ public class MainActivity extends AppCompatActivity {
             spawnFrog();
             spawnStarRandomly();
             spawnPeeRandomly();
+            spawnClockRandomly(); // Resume spawning clocks
         }
     }
 
@@ -324,6 +364,10 @@ public class MainActivity extends AppCompatActivity {
         if (gameOver != null) {
             gameOver.release();
             gameOver = null;
+        }
+        if (clockSound != null) {
+            clockSound.release();
+            clockSound = null;
         }
     }
 }
