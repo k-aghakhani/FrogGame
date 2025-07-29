@@ -61,7 +61,7 @@
             android:layout_height="wrap_content"
             android:text="Time: 180"
             android:textSize="24sp"
-            android:textColor="#FFFFFF"
+            android:textColor="#F6EEEE"
             android:fontFamily="@font/roboto_bold"
             android:padding="8dp"
             android:shadowColor="#80000000"
